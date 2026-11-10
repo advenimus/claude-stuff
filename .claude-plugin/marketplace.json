@@ -1,0 +1,11 @@
+{
+  "name": "claude-stuff",
+  "owner": { "name": "advenimus" },
+  "plugins": [
+    {
+      "name": "prompt-enhancer",
+      "source": "./mods/prompt-enhancer",
+      "description": "Enhance, Undo, Send and Reset buttons above the prompt box, with clarifying questions and a settings gear."
+    }
+  ]
+}
