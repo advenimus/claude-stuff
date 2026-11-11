@@ -17,6 +17,8 @@ A mod changes how Claude Code looks or behaves, for example a bar above the prom
 
 A bar above the prompt box that improves your draft before you send it. It never sends anything on its own.
 
+![The prompt enhancer bar above the prompt box](docs/screenshots/prompt-enhancer.png)
+
 - **Enhance:** rewrites your draft using your CLAUDE.md files, the start of the README, package.json, git state, recent chat messages and the skills that match your words. The new version lands in the prompt box. You read it, then press Enter or Send.
 - **Questions:** if the draft has gaps, it asks up to three pick-one questions first. Your answers go into the rewrite as decisions already made. You can skip them.
 - **Undo:** puts your original draft back.
@@ -48,6 +50,8 @@ A mod is code that runs with your permissions and can see your prompts. Read the
 ### context-pie
 
 A small pie icon and a percentage at the bottom right of the prompt, showing how full the context window is.
+
+![The context pie at the bottom right of the prompt](docs/screenshots/context-pie.png)
 
 - **Pie:** goes from empty to full as the context fills.
 - **Colors:** green below 60%, yellow from 60%, red from 80%.
