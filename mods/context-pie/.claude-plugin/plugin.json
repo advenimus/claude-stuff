@@ -1,0 +1,6 @@
+{
+  "name": "context-pie",
+  "version": "0.1.0",
+  "description": "Shows how full the context window is as a pie icon and percentage at the bottom right of the prompt.",
+  "types": "./types/index.d.ts"
+}

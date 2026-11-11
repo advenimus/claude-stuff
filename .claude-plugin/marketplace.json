@@ -1,11 +1,18 @@
 {
   "name": "claude-stuff",
-  "owner": { "name": "advenimus" },
+  "owner": {
+    "name": "advenimus"
+  },
   "plugins": [
     {
       "name": "prompt-enhancer",
       "source": "./mods/prompt-enhancer",
       "description": "Enhance, Undo, Send and Reset buttons above the prompt box, with clarifying questions and a settings gear."
+    },
+    {
+      "name": "context-pie",
+      "source": "./mods/context-pie",
+      "description": "Shows how full the context window is as a pie icon and percentage at the bottom right of the prompt."
     }
   ]
 }

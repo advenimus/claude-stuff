@@ -45,6 +45,30 @@ In the desktop app, `/plugin` does not run. Click + next to the prompt box, then
 
 A mod is code that runs with your permissions and can see your prompts. Read the source in [mods/prompt-enhancer](mods/prompt-enhancer) before you install it.
 
+### context-pie
+
+A small pie icon and a percentage at the bottom right of the prompt, showing how full the context window is.
+
+- **Pie:** goes from empty to full as the context fills.
+- **Colors:** green below 60%, yellow from 60%, red from 80%.
+- **Updates:** by itself after each reply.
+- **Theme:** uses your Claude Code theme colors, so it fits light and dark mode.
+- **Privacy:** reads the context figure only. It sends nothing anywhere.
+
+**Install**
+
+```text
+/plugin install context-pie --marketplace advenimus/claude-stuff
+```
+
+From a shell:
+
+```sh
+claude plugin install context-pie --marketplace advenimus/claude-stuff
+```
+
+Read the source in [mods/context-pie](mods/context-pie) before you install it.
+
 ## Plugins
 
 Coming soon.
