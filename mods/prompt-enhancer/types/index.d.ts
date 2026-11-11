@@ -26,6 +26,7 @@ declare module 'claude-code' {
       expanded: string
       settings: EnhancerSettings
       isSettingsOpen: boolean
+      isBarOpen: boolean
     }
   }
 }

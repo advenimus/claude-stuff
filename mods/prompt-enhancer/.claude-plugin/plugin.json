@@ -1,6 +1,6 @@
 {
   "name": "prompt-enhancer",
   "version": "0.1.0",
-  "description": "Enhance, Undo, Send and Reset buttons above the prompt box, with clarifying questions and a settings gear. Never sends on its own.",
+  "description": "Enhance, Undo, Send and Reset icons under the prompt box, behind one icon, with clarifying questions and a settings gear. Never sends on its own.",
   "types": "./types/index.d.ts"
 }

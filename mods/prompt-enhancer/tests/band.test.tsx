@@ -5,18 +5,18 @@ type On = Parameters<TestBody>[1]
 
 const BAND = {
   plugin: 'prompt-enhancer',
-  component: 'AbovePrompt',
+  component: 'PromptHint',
   requestId: 'band',
   props: {
-    hasSurvey: false,
-    isCollapsed: false,
+    isDraft: true,
     isWorking: false,
-    maxRows: 10,
-    bodyColumns: 80,
-    scroll: { offset: 0, bodyRows: 10 },
-    view: {},
+    hint: '? for shortcuts',
   },
 } as const
+
+async function openBar($: Parameters<TestBody>[0]) {
+  await $.command.run({ command: 'enhancer' } as never)
+}
 
 const USAGE = {
   input_tokens: 0,
@@ -61,6 +61,7 @@ test('Enhance rewrites the draft, Undo puts it back, on every surface', async ($
   for (const surface of ['terminal', 'desktop'] as const) {
     box = 'fix the bug'
     fills.length = 0
+    if (surface === 'terminal') await openBar($)
     const ui = await $.ui.mount({ ...BAND, surface })
 
     await ui.press({ key: 'enhance' })
@@ -82,6 +83,8 @@ test('Enhance on an empty box says so and changes nothing', async ($, on) => {
     fills.push(e.text)
     return { isFilled: true }
   })
+
+  await openBar($)
 
   const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
   await ui.press({ key: 'enhance' })
@@ -107,6 +110,8 @@ test('a failed model call shows the reason and keeps the draft', async ($, on) =
   on('process.run', () => ({ value: NOT_A_REPO }))
   on('tool.call', () => ({ result: {}, text: '' }))
   on('model.complete', () => ({ value: { isAnswered: false, reason: 'api-error', status: 500, error: 'server_error', usage: USAGE } }))
+
+  await openBar($)
 
   const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
   await ui.press({ key: 'enhance' })
@@ -154,6 +159,8 @@ test('questions show up, the answer feeds the rewrite, Reset clears it', async (
   const prompts: string[] = []
   seedEngine(on, box, prompts)
 
+  await openBar($)
+
   const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
   await ui.press({ key: 'enhance' })
 
@@ -183,6 +190,8 @@ test('a long answer is drawn whole and a picked question collapses to one line',
   })
   seedEngine(on, box, [], [], questionsJson)
 
+  await openBar($)
+
   const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
   await ui.press({ key: 'enhance' })
 
@@ -199,6 +208,8 @@ test('Skip questions rewrites without answers', async ($, on) => {
   const prompts: string[] = []
   seedEngine(on, box, prompts)
 
+  await openBar($)
+
   const ui = await $.ui.mount({ ...BAND, surface: 'desktop' })
   await ui.press({ key: 'enhance' })
   await ui.press({ key: 'skip' })
@@ -210,6 +221,7 @@ test('Skip questions rewrites without answers', async ($, on) => {
 
 test('the title row names the model it uses', async ($, on) => {
   on('session.model', () => ({ value: 'claude-opus-4' }))
+  await openBar($)
   const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
   expect(await ui.find({ type: 'Text', text: /Prompt enhancer .* sonnet/ })).toBeDefined()
   await ui.unmount()
@@ -226,6 +238,8 @@ test('the gear opens settings and Follow session sends the session model', async
     return { value: undefined }
   })
 
+  await openBar($)
+
   const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
   expect(await ui.find({ type: 'Select', key: 'set-model' })).toBeUndefined()
 
@@ -238,4 +252,22 @@ test('the gear opens settings and Follow session sends the session model', async
   await ui.press({ key: 'skip' })
   expect(models.every(model => model === 'claude-opus-4')).toBe(true)
   await ui.unmount()
+})
+
+test('the bar is one icon until it is clicked, and clicking again hides it', async ($, on) => {
+  on('session.model', () => ({ value: 'claude-opus-4' }))
+
+  const closed = await $.ui.mount({ ...BAND, surface: 'terminal' })
+  expect(await closed.find({ type: 'Button', key: 'enhance' })).toBeUndefined()
+  await closed.unmount()
+
+  await openBar($)
+  const open = await $.ui.mount({ ...BAND, surface: 'terminal' })
+  expect(await open.find({ type: 'Button', key: 'enhance' })).toBeDefined()
+  await open.unmount()
+
+  await openBar($)
+  const hidden = await $.ui.mount({ ...BAND, surface: 'terminal' })
+  expect(await hidden.find({ type: 'Button', key: 'enhance' })).toBeUndefined()
+  await hidden.unmount()
 })

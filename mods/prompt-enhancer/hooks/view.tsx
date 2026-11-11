@@ -24,8 +24,17 @@ const extra = atom({ plugin: 'prompt-enhancer', key: 'extra' } as const, '')
 const expanded = atom({ plugin: 'prompt-enhancer', key: 'expanded' } as const, '')
 const settings = atom({ plugin: 'prompt-enhancer', key: 'settings' } as const, DEFAULT_SETTINGS)
 const isSettingsOpen = atom({ plugin: 'prompt-enhancer', key: 'isSettingsOpen' } as const, false)
+const isBarOpen = atom({ plugin: 'prompt-enhancer', key: 'isBarOpen' } as const, false)
 
 type RenderEvent = Parameters<EngineInterface['ui']['resolve']>[0]
+
+export async function toggleBar($: EngineInterface) {
+  await update($, isBarOpen, open => !open)
+}
+
+export async function renderBandIfOpen($: EngineInterface, e: RenderEvent) {
+  return (await read($, isBarOpen)) ? renderBand($, e) : null
+}
 
 export async function renderBand($: EngineInterface, e: RenderEvent) {
   const { Box, Button, Input, Select, Text } = $.ui.resolve(e)
@@ -100,13 +109,13 @@ export async function renderBand($: EngineInterface, e: RenderEvent) {
       : [
           <Button
             key="enhance"
-            label={isBusy ? 'Enhancing...' : 'Enhance'}
+            label={isBusy ? '\u2026' : '\u2726'}
             onPress={() => startEnhance($)}
           />,
         ]),
-    ...(saved === null ? [] : [<Button key="undo" label="Undo" onPress={() => undo($)} />]),
-    <Button key="send" label="Send" onPress={() => send($)} />,
-    <Button key="reset" label="Reset" onPress={() => reset($)} />,
+    ...(saved === null ? [] : [<Button key="undo" label={'\u21b6'} onPress={() => undo($)} />]),
+    <Button key="send" label={'\u27a4'} onPress={() => send($)} />,
+    <Button key="reset" label={'\u21ba'} onPress={() => reset($)} />,
   ]
 
   const onOff = (value: boolean) => (value ? 'on' : 'off')
@@ -152,24 +161,23 @@ export async function renderBand($: EngineInterface, e: RenderEvent) {
   return (
     <Box
       flexDirection="column"
-      backgroundColor="userMessageBackground"
       borderStyle="round"
       borderColor="promptBorder"
       paddingX={1}
     >
       {[
-        <Box key="top" justifyContent="space-between">
+        <Box key="top" gap={1}>
           <Text color="subtle">{`Prompt enhancer \u00b7 ${modelLabel}`}</Text>
+          {buttons}
+          <Box flexGrow={1}>
+            <Text color={current === 'error' ? 'error' : 'subtle'} wrap="truncate-end">
+              {message}
+            </Text>
+          </Box>
           <Button key="gear" label={'\u2699'} plain onPress={() => toggleSettings($)} />
         </Box>,
         ...settingsRows,
         ...questionRows,
-        <Box key="controls" gap={1}>
-          {buttons}
-          <Text color={current === 'error' ? 'error' : 'subtle'}>
-            {message === '' ? '' : message}
-          </Text>
-        </Box>,
       ]}
     </Box>
   )
