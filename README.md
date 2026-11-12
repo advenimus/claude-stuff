@@ -19,7 +19,7 @@ A bar under the prompt box that improves your draft before you send it. It never
 
 ![The prompt enhancer bar under the prompt box](docs/screenshots/prompt-enhancer.png)
 
-- **Show or hide:** the bar stays hidden until you click the ✦ icon next to the context pie (installed with the context-pie mod), or type `/enhancer`.
+- **Show or hide:** the bar stays hidden until you click the ✦ icon next to the context pie (installed with the chat-status mod), or type `/enhancer`.
 - **✦ Enhance:** rewrites your draft using your CLAUDE.md files, the start of the README, package.json, git state, recent chat messages and the skills that match your words. The new version lands in the prompt box. You read it, then press Enter or ➤.
 - **Questions:** if the draft has gaps, it asks up to three pick-one questions first. Your answers go into the rewrite as decisions already made. You can skip them.
 - **↶ Undo:** puts your original draft back.
@@ -48,33 +48,36 @@ In the desktop app, `/plugin` does not run. Click + next to the prompt box, then
 
 A mod is code that runs with your permissions and can see your prompts. Read the source in [mods/prompt-enhancer](mods/prompt-enhancer) before you install it.
 
-### context-pie
+### chat-status
 
-A status line under the prompt box: the model and effort, tokens used this session, the folder, and a pie with the context percentage on the right.
+A status line under the prompt box for the chat you have on screen: the model, effort and tokens of the main chat, or of the subagent you are viewing, plus the folder and a pie with the context percentage on the right. It was called context-pie before 0.2.0.
 
-![The status line under the prompt box](docs/screenshots/context-pie.png)
+![The status line under the prompt box](docs/screenshots/chat-status.png)
 
-- **Model:** click it to pick Opus, Sonnet or Haiku. It runs `/model` for you.
-- **Effort:** click it to pick low, medium, high, xhigh or max. It runs `/effort` for you. It shows after your first message.
-- **Tokens:** the total this session (input, output and cache). Click it to run `/usage`. It counts from the last reload.
-- **Pie:** goes from empty to full as the context fills. Green below 60%, yellow from 60%, red from 80%.
+- **Model:** the model the chat on screen runs on. It is a label, not a picker. Use `/model` to change it.
+- **Subagents:** open a subagent from the tasks list and the line switches to it: `↳ name`, its model, its effort and its tokens. Go back and it shows the main chat again.
+- **Effort:** click it in the main chat to pick low, medium, high, xhigh or max. It runs `/effort` for you. It shows after the first message.
+- **Tokens:** the total for the chat on screen (input, output and cache). It counts from the last reload.
+- **Pie:** the main chat's context. Goes from empty to full as it fills. Green below 60%, yellow from 60%, red from 80%.
 - **✦ icon:** appears when the prompt-enhancer mod is installed. Click it to show or hide that bar.
 - **Theme:** uses your Claude Code theme colors, so it fits light and dark mode.
 - **Privacy:** reads figures from your own session only. It sends nothing anywhere.
 
+If you had context-pie installed, remove it first: `/plugin uninstall context-pie`.
+
 **Install**
 
 ```text
-/plugin install context-pie --marketplace advenimus/claude-stuff
+/plugin install chat-status --marketplace advenimus/claude-stuff
 ```
 
 From a shell:
 
 ```sh
-claude plugin install context-pie --marketplace advenimus/claude-stuff
+claude plugin install chat-status --marketplace advenimus/claude-stuff
 ```
 
-Read the source in [mods/context-pie](mods/context-pie) before you install it.
+Read the source in [mods/chat-status](mods/chat-status) before you install it.
 
 ## Plugins
 

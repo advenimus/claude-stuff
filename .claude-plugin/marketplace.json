@@ -10,9 +10,9 @@
       "description": "Enhance, Undo, Send and Reset icons under the prompt box, behind one icon, with clarifying questions and a settings gear."
     },
     {
-      "name": "context-pie",
-      "source": "./mods/context-pie",
-      "description": "A status line under the prompt: model, effort, tokens used, folder and a context pie. Click to run /usage or switch model and effort."
+      "name": "chat-status",
+      "source": "./mods/chat-status",
+      "description": "A status line under the prompt for the chat on screen: model, effort and tokens of the main chat or the subagent you are viewing, the folder, and a context pie."
     }
   ]
 }

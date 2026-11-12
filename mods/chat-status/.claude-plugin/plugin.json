@@ -1,0 +1,6 @@
+{
+  "name": "chat-status",
+  "version": "0.2.0",
+  "description": "A status line under the prompt for the chat on screen: model, effort and tokens of the main chat or the subagent you are viewing, the folder, and a context pie.",
+  "types": "./types/index.d.ts"
+}
