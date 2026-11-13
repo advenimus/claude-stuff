@@ -1,6 +1,6 @@
 {
   "name": "chat-status",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "A status line under the prompt for the chat on screen: model and effort pickers and an enhance button (locked while Claude or a subagent works), tokens or session cost, the folder, and a context pie.",
   "types": "./types/index.d.ts"
 }

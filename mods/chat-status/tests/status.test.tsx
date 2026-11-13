@@ -162,13 +162,13 @@ test('model and effort are locked in a subagent view', async ($, on) => {
   await back.unmount()
 })
 
-test('viewing a subagent shows that agent, its model and its tokens', async ($, on) => {
+test('viewing a subagent shows its model and tokens, not its name', async ($, on) => {
   answerSession(on)
 
   const band = await $.ui.mount(viewAgent('agent-1'))
   const ui = await $.ui.mount({ ...HINT, surface: 'terminal' })
 
-  expect(await ui.find({ type: 'Text', text: /Explore/ })).toBeTruthy()
+  expect(await ui.find({ type: 'Text', text: /Explore/ })).toBeFalsy()
   expect(await ui.find({ type: 'Text', text: /Haiku 5\.5/ })).toBeTruthy()
   expect(await ui.find({ type: 'Text', text: /900 tokens/ })).toBeTruthy()
   expect(await ui.find({ type: 'Text', text: /Sonnet/ })).toBeFalsy()

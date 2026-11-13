@@ -55,7 +55,7 @@ A status line under the prompt box for the chat you have on screen: the model, e
 ![The status line under the prompt box](docs/screenshots/chat-status.png)
 
 - **Model:** click it to pick Opus, Sonnet or Haiku. It runs `/model` for you.
-- **Subagents:** open a subagent from the tasks list and the line switches to it: `↳ name`, its model, its effort and its tokens. Go back and it shows the main chat again.
+- **Subagents:** open a subagent from the tasks list and the line switches to its model, effort and tokens. Go back and it shows the main chat again.
 - **Effort:** click it to pick low, medium, high, xhigh or max. It runs `/effort` for you. It shows after the first message.
 - **Locked while busy:** the model and effort pickers do nothing while Claude or a subagent is working, or while you view a subagent. They look the same but ignore clicks. They work again once the work is done.
 - **Tokens:** in the main chat, the session total across the main chat and its subagents, as `/usage` counts input, output and cache. In a subagent, that agent's own. It updates after each model reply. Click it to switch between tokens and the session cost in US dollars.

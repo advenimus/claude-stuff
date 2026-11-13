@@ -79,15 +79,6 @@ async function runCommand($: EngineInterface, command: string, args = ''): Promi
   }
 }
 
-async function agentLabel($: EngineInterface, agentId: string): Promise<string> {
-  try {
-    const agent = (await $.agent.list()).find(item => item.id === agentId)
-    return agent === undefined ? 'agent' : agent.name ?? agent.type
-  } catch {
-    return 'agent'
-  }
-}
-
 const enhancerLabel = (isDraft: boolean): string => (isDraft ? '\u2726 enhance prompt' : '\u2726')
 
 async function isBusy($: EngineInterface, isWorking: boolean): Promise<boolean> {
@@ -177,7 +168,6 @@ export const register: Register = on => {
     const open = isLocked ? '' : await read($, picker)
     const model = agentId === undefined ? await $.session.model() : stats.model
     const folder = folderOf(await $.session.cwd())
-    const label = agentId === undefined ? undefined : await agentLabel($, agentId)
     const enhancer = (await $.command.list()).find(
       command => command.name === 'enhancer' || command.name.endsWith(':enhancer'),
     )
@@ -194,7 +184,6 @@ export const register: Register = on => {
         </Button>
       )
     const segments = [
-      ...(label === undefined ? [] : [<Text key="agent" color="suggestion">{`\u21b3 ${label}`}</Text>]),
       lockable(
         'model',
         <Text color="claude" bold>{`\u2726 ${model === '' ? '\u2026' : prettyModel(model)}`}</Text>,
