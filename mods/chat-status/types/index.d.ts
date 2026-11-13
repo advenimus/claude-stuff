@@ -5,6 +5,8 @@ declare module 'claude-code' {
     'chat-status': {
       percent: number
       picker: string
+      cost: number
+      showCost: boolean
       loops: Record<string, LoopStats>
     }
   }

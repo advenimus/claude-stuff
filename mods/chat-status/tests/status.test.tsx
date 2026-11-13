@@ -10,16 +10,20 @@ const HINT = {
 const STATE: Record<string, unknown> = {
   percent: 42,
   picker: '',
+  cost: 1.234,
+  showCost: false,
   loops: {
     main: { model: 'claude-opus-5-5', effort: 'high', tokens: 12_300 },
     'agent-1': { model: 'claude-haiku-5-5', effort: '', tokens: 900 },
   },
 }
 
+const VERSIONS: Record<string, number> = {}
+
 type On = Parameters<Parameters<typeof test>[1]>[1]
 
 const answerSession = (on: On, ran: string[] = [], commands: unknown[] = []) => {
-  on('state.get', ($, e) => ({ value: { value: STATE[e.key], version: 1 } }))
+  on('state.get', ($, e) => ({ value: { value: STATE[e.key], version: VERSIONS[e.key] ?? 1 } }))
   on('session.model', () => ({ value: 'claude-sonnet-5-5' }))
   on('session.cwd', () => ({ value: '/home/user/work/claude-stuff' }))
   on('command.list', () => ({ value: commands }))
@@ -52,7 +56,7 @@ test('main view shows the session model, main tokens, folder and pie', async ($,
     const ui = await $.ui.mount({ ...HINT, surface })
 
     expect(await ui.find({ type: 'Text', text: /Sonnet 5\.5/ })).toBeTruthy()
-    expect(await ui.find({ type: 'Text', text: /12\.3k tokens/ })).toBeTruthy()
+    expect(await ui.find({ type: 'Text', text: /13\.2k tokens/ })).toBeTruthy()
     expect(await ui.find({ type: 'Text', text: /claude-stuff/ })).toBeTruthy()
     expect((await ui.find({ type: 'Text', text: /42%/ }))?.text).toBe('42%')
     expect(await ui.find({ type: 'Text', text: /engine/ })).toBeTruthy()
@@ -60,14 +64,38 @@ test('main view shows the session model, main tokens, folder and pie', async ($,
   }
 })
 
-test('model and tokens are not buttons: pressing them runs nothing', async ($, on) => {
+test('pressing tokens switches to the session cost and back', async ($, on) => {
+  const ran: string[] = []
+  answerSession(on, ran)
+  const writes: unknown[] = []
+  on('state.set', ($, e) => {
+    if (e.key === 'showCost') {
+      writes.push(e.value)
+      STATE.showCost = e.value
+    }
+    VERSIONS[e.key] = (VERSIONS[e.key] ?? 1) + 1
+    return { value: { isSet: true, version: VERSIONS[e.key] } }
+  })
+
+  const ui = await $.ui.mount({ ...HINT, surface: 'terminal' })
+  await ui.press({ key: 'tokens' })
+  expect(writes).toEqual([true])
+  expect(ran).toEqual([])
+  await ui.unmount()
+
+  const shown = await $.ui.mount({ ...HINT, surface: 'terminal' })
+  expect(await shown.find({ type: 'Text', text: /\$1\.23 session/ })).toBeTruthy()
+  await shown.unmount()
+  STATE.showCost = false
+})
+
+test('the model is not a button: pressing it runs nothing', async ($, on) => {
   const ran: string[] = []
   answerSession(on, ran)
 
   const ui = await $.ui.mount({ ...HINT, surface: 'terminal' })
 
   await ui.press({ key: 'model' }).catch(() => undefined)
-  await ui.press({ key: 'tokens' }).catch(() => undefined)
   expect(ran).toEqual([])
   expect(await ui.find({ type: 'Text', text: /Opus$/ })).toBeFalsy()
   await ui.unmount()

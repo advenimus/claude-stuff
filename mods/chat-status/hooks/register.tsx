@@ -4,6 +4,8 @@ import type { LoopStats } from '../types'
 
 const percent = atom({ plugin: 'chat-status', key: 'percent' } as const, 0)
 const picker = atom({ plugin: 'chat-status', key: 'picker' } as const, '')
+const cost = atom({ plugin: 'chat-status', key: 'cost' } as const, 0)
+const showCost = atom({ plugin: 'chat-status', key: 'showCost' } as const, false)
 const loops = atom({ plugin: 'chat-status', key: 'loops' } as const, {} as Record<string, LoopStats>)
 
 const MAIN = 'main'
@@ -27,6 +29,16 @@ const formatTokens = (value: number): string =>
     : value >= 1_000
       ? `${(value / 1_000).toFixed(1)}k`
       : String(value)
+
+const formatCost = (usd: number): string => `$${usd < 10 ? usd.toFixed(2) : usd.toFixed(1)}`
+
+const sumTokens = (all: Record<string, LoopStats>): number =>
+  Object.values(all).reduce((total, stats) => total + stats.tokens, 0)
+
+async function refreshCost($: EngineInterface): Promise<void> {
+  const usage = await $.session.usage()
+  if (usage.cost !== undefined) await update($, cost, () => usage.cost?.usd ?? 0)
+}
 
 const folderOf = (path: string): string => path.split('/').filter(Boolean).at(-1) ?? '/'
 
@@ -72,6 +84,7 @@ export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     const { context } = await $.session.usage()
     await update($, percent, () => clamp(context.percent ?? 0))
+    await refreshCost($)
 
     return next(e)
   })
@@ -105,6 +118,7 @@ export const register: Register = on => {
         const added =
           input_tokens + output_tokens + cache_creation_input_tokens + cache_read_input_tokens
         await update($, loops, patchLoop(key, stats => ({ ...stats, tokens: stats.tokens + added })))
+        await refreshCost($)
       }
       yield chunk
     }
@@ -126,7 +140,11 @@ export const register: Register = on => {
     const engineLine = await next(e)
     const { Box, Text, Button } = $.ui.resolve(e)
     const agentId = viewedAgent
-    const stats = (await read($, loops))[agentId ?? MAIN] ?? EMPTY
+    const allLoops = await read($, loops)
+    const stats = allLoops[agentId ?? MAIN] ?? EMPTY
+    const shownTokens = agentId === undefined ? sumTokens(allLoops) : stats.tokens
+    const isCost = await read($, showCost)
+    const spent = await read($, cost)
     const value = await read($, percent)
     const open = agentId === undefined ? await read($, picker) : ''
     const model = agentId === undefined ? await $.session.model() : stats.model
@@ -151,7 +169,11 @@ export const register: Register = on => {
               <Box key="effort">{effortText}</Box>
             ),
           ]),
-      <Text key="tokens" color="text">{`${formatTokens(stats.tokens)} tokens`}</Text>,
+      <Button key="tokens" plain onPress={() => update($, showCost, current => !current)}>
+        <Text color="text">
+          {isCost ? `${formatCost(spent)} session` : `${formatTokens(shownTokens)} tokens`}
+        </Text>
+      </Button>,
       <Text key="folder" color="subtle" wrap="truncate-end">{`▸ ${folder}`}</Text>,
     ]
     const parts = segments.flatMap((segment, index) =>

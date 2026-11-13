@@ -57,7 +57,7 @@ A status line under the prompt box for the chat you have on screen: the model, e
 - **Model:** the model the chat on screen runs on. It is a label, not a picker. Use `/model` to change it.
 - **Subagents:** open a subagent from the tasks list and the line switches to it: `↳ name`, its model, its effort and its tokens. Go back and it shows the main chat again.
 - **Effort:** click it in the main chat to pick low, medium, high, xhigh or max. It runs `/effort` for you. It shows after the first message.
-- **Tokens:** the total for the chat on screen (input, output and cache). It counts from the last reload.
+- **Tokens:** in the main chat, the session total across the main chat and its subagents, as `/usage` counts input, output and cache. In a subagent, that agent's own. It updates after each model reply. Click it to switch between tokens and the session cost in US dollars.
 - **Pie:** the main chat's context. Goes from empty to full as it fills. Green below 60%, yellow from 60%, red from 80%.
 - **✦ icon:** appears when the prompt-enhancer mod is installed. Click it to show or hide that bar.
 - **Theme:** uses your Claude Code theme colors, so it fits light and dark mode.
