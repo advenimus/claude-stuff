@@ -54,6 +54,10 @@ A status line under the prompt box for the chat you have on screen: the model, e
 
 ![The status line under the prompt box](docs/screenshots/chat-status.png)
 
+Once you type, the ✦ icon reads "enhance prompt":
+
+![The status line with text in the prompt](docs/screenshots/chat-status-draft.png)
+
 - **Model:** click it to pick Fable, Opus, Sonnet or Haiku. It runs `/model` with the family name, so you always get the newest version of each.
 - **Subagents:** open a subagent from the tasks list and the line switches to its model, effort and tokens. Go back and it shows the main chat again.
 - **Effort:** click it to pick low, medium, high, xhigh or max. It runs `/effort` for you. It shows after the first message.
