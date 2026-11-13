@@ -9,7 +9,9 @@ const showCost = atom({ plugin: 'chat-status', key: 'showCost' } as const, false
 const loops = atom({ plugin: 'chat-status', key: 'loops' } as const, {} as Record<string, LoopStats>)
 
 const MAIN = 'main'
+// Aliases, not ids: /model resolves each to that family's newest model.
 const MODELS = [
+  { alias: 'fable', label: 'Fable' },
   { alias: 'opus', label: 'Opus' },
   { alias: 'sonnet', label: 'Sonnet' },
   { alias: 'haiku', label: 'Haiku' },

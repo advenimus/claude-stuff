@@ -104,8 +104,9 @@ test('the model picker runs /model when idle', async ($, on) => {
   await ui.press({ key: 'model' })
   await ui.unmount()
   const open = await $.ui.mount({ ...HINT, surface: 'terminal' })
-  await open.press({ key: 'model-Opus' })
-  expect(ran).toEqual(['model opus'])
+  expect(await open.find({ type: 'Text', text: /Fable/ })).toBeTruthy()
+  await open.press({ key: 'model-Fable' })
+  expect(ran).toEqual(['model fable'])
   await open.unmount()
   STATE.picker = ''
 })
