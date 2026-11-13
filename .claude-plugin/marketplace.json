@@ -12,7 +12,7 @@
     {
       "name": "chat-status",
       "source": "./mods/chat-status",
-      "description": "A status line under the prompt for the chat on screen: model, effort and tokens of the main chat or the subagent you are viewing, the folder, and a context pie."
+      "description": "A status line under the prompt for the chat on screen: model and effort pickers and an enhance button (locked while Claude or a subagent works), tokens or session cost, the folder, and a context pie."
     }
   ]
 }

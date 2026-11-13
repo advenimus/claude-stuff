@@ -18,6 +18,8 @@ const STATE: Record<string, unknown> = {
   },
 }
 
+const AGENT = { status: 'completed' }
+
 const VERSIONS: Record<string, number> = {}
 
 type On = Parameters<Parameters<typeof test>[1]>[1]
@@ -28,7 +30,7 @@ const answerSession = (on: On, ran: string[] = [], commands: unknown[] = []) => 
   on('session.cwd', () => ({ value: '/home/user/work/claude-stuff' }))
   on('command.list', () => ({ value: commands }))
   on('agent.list', () => ({
-    value: [{ id: 'agent-1', description: 'scan', type: 'Explore', status: 'running' }],
+    value: [{ id: 'agent-1', description: 'scan', type: 'Explore', status: AGENT.status }],
   }))
   on('ui.toast', () => ({ value: {} }))
   on('command.run', ($, e) => {
@@ -89,16 +91,75 @@ test('pressing tokens switches to the session cost and back', async ($, on) => {
   STATE.showCost = false
 })
 
-test('the model is not a button: pressing it runs nothing', async ($, on) => {
+test('the model picker runs /model when idle', async ($, on) => {
   const ran: string[] = []
   answerSession(on, ran)
+  on('state.set', ($, e) => {
+    STATE[e.key] = e.value
+    VERSIONS[e.key] = (VERSIONS[e.key] ?? 1) + 1
+    return { value: { isSet: true, version: VERSIONS[e.key] } }
+  })
 
   const ui = await $.ui.mount({ ...HINT, surface: 'terminal' })
-
-  await ui.press({ key: 'model' }).catch(() => undefined)
-  expect(ran).toEqual([])
-  expect(await ui.find({ type: 'Text', text: /Opus$/ })).toBeFalsy()
+  await ui.press({ key: 'model' })
   await ui.unmount()
+  const open = await $.ui.mount({ ...HINT, surface: 'terminal' })
+  await open.press({ key: 'model-Opus' })
+  expect(ran).toEqual(['model opus'])
+  await open.unmount()
+  STATE.picker = ''
+})
+
+test('model and effort are locked while a turn runs', async ($, on) => {
+  const ran: string[] = []
+  answerSession(on, ran)
+  const writes: string[] = []
+  on('state.set', ($, e) => {
+    writes.push(e.key)
+    return { value: { isSet: true, version: 2 } }
+  })
+
+  const ui = await $.ui.mount({ ...HINT, surface: 'terminal', props: { ...HINT.props, isWorking: true } })
+  await ui.press({ key: 'model' }).catch(() => undefined)
+  await ui.press({ key: 'effort' }).catch(() => undefined)
+  expect(writes).toEqual([])
+  expect(ran).toEqual([])
+  await ui.unmount()
+})
+
+test('model and effort are locked while a subagent runs', async ($, on) => {
+  AGENT.status = 'running'
+  const ran: string[] = []
+  answerSession(on, ran)
+  const writes: string[] = []
+  on('state.set', ($, e) => {
+    writes.push(e.key)
+    return { value: { isSet: true, version: 2 } }
+  })
+
+  const ui = await $.ui.mount({ ...HINT, surface: 'terminal' })
+  await ui.press({ key: 'model' }).catch(() => undefined)
+  expect(writes).toEqual([])
+  await ui.unmount()
+  AGENT.status = 'completed'
+})
+
+test('model and effort are locked in a subagent view', async ($, on) => {
+  answerSession(on)
+  const writes: string[] = []
+  on('state.set', ($, e) => {
+    writes.push(e.key)
+    return { value: { isSet: true, version: 2 } }
+  })
+
+  const band = await $.ui.mount(viewAgent('agent-1'))
+  const ui = await $.ui.mount({ ...HINT, surface: 'terminal' })
+  await ui.press({ key: 'model' }).catch(() => undefined)
+  expect(writes).toEqual([])
+  await ui.unmount()
+  await band.unmount()
+  const back = await $.ui.mount(viewAgent())
+  await back.unmount()
 })
 
 test('viewing a subagent shows that agent, its model and its tokens', async ($, on) => {
@@ -128,8 +189,17 @@ test('the enhancer icon shows only when the command exists, and runs it', async 
   ])
 
   const ui = await $.ui.mount({ ...HINT, surface: 'terminal' })
-
+  expect((await ui.find({ type: 'Text', text: /✦$/ }))?.text).toBe('✦')
   await ui.press({ key: 'enhancer' })
   expect(ran).toEqual(['enhancer'])
   await ui.unmount()
+
+  const drafted = await $.ui.mount({ ...HINT, surface: 'terminal', props: { ...HINT.props, isDraft: true } })
+  expect(await drafted.find({ type: 'Text', text: /enhance prompt/ })).toBeTruthy()
+  await drafted.unmount()
+
+  const busy = await $.ui.mount({ ...HINT, surface: 'terminal', props: { ...HINT.props, isWorking: true } })
+  await busy.press({ key: 'enhancer' }).catch(() => undefined)
+  expect(ran).toEqual(['enhancer'])
+  await busy.unmount()
 })

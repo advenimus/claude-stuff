@@ -9,6 +9,11 @@ const showCost = atom({ plugin: 'chat-status', key: 'showCost' } as const, false
 const loops = atom({ plugin: 'chat-status', key: 'loops' } as const, {} as Record<string, LoopStats>)
 
 const MAIN = 'main'
+const MODELS = [
+  { alias: 'opus', label: 'Opus' },
+  { alias: 'sonnet', label: 'Sonnet' },
+  { alias: 'haiku', label: 'Haiku' },
+] as const
 const EFFORTS = ['low', 'medium', 'high', 'xhigh', 'max'] as const
 const GLYPHS = ['○', '◔', '◑', '◕', '●'] as const
 const WARN_AT = 60
@@ -17,6 +22,9 @@ const EMPTY: LoopStats = { model: '', effort: '', tokens: 0 }
 
 // PromptHint carries no view, so the AbovePrompt hook records it here.
 let viewedAgent: string | undefined
+let lastWorking = false
+
+const BUSY_STATUSES = new Set(['pending', 'running'])
 
 const clamp = (value: number) => Math.min(100, Math.max(0, Math.round(value)))
 
@@ -80,6 +88,17 @@ async function agentLabel($: EngineInterface, agentId: string): Promise<string> 
   }
 }
 
+const enhancerLabel = (isDraft: boolean): string => (isDraft ? '\u2726 enhance prompt' : '\u2726')
+
+async function isBusy($: EngineInterface, isWorking: boolean): Promise<boolean> {
+  if (isWorking) return true
+  try {
+    return (await $.agent.list()).some(agent => BUSY_STATUSES.has(agent.status))
+  } catch {
+    return false
+  }
+}
+
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     const { context } = await $.session.usage()
@@ -126,6 +145,12 @@ export const register: Register = on => {
     return await stream.result
   })
 
+  on('turn.complete', async ($, e, next) => {
+    const result = await next(e)
+    $.ui.invalidate('ui.render')
+    return result
+  })
+
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
     const agentId = e.props.view.agentId
     if (agentId !== viewedAgent) {
@@ -138,6 +163,7 @@ export const register: Register = on => {
 
   on('ui.render', { component: 'PromptHint' }, async ($, e, next) => {
     const engineLine = await next(e)
+    lastWorking = e.props.isWorking
     const { Box, Text, Button } = $.ui.resolve(e)
     const agentId = viewedAgent
     const allLoops = await read($, loops)
@@ -146,58 +172,73 @@ export const register: Register = on => {
     const isCost = await read($, showCost)
     const spent = await read($, cost)
     const value = await read($, percent)
-    const open = agentId === undefined ? await read($, picker) : ''
+    const isWorkingNow = await isBusy($, e.props.isWorking)
+    const isLocked = agentId !== undefined || isWorkingNow
+    const open = isLocked ? '' : await read($, picker)
     const model = agentId === undefined ? await $.session.model() : stats.model
     const folder = folderOf(await $.session.cwd())
     const label = agentId === undefined ? undefined : await agentLabel($, agentId)
     const enhancer = (await $.command.list()).find(
       command => command.name === 'enhancer' || command.name.endsWith(':enhancer'),
     )
-    const togglePicker = () => update($, picker, current => (current === 'effort' ? '' : 'effort'))
-    const effortText = <Text color={effortColor(stats.effort)}>{stats.effort}</Text>
+    const toggle = (name: string) => async () => {
+      if (viewedAgent !== undefined || (await isBusy($, lastWorking))) return
+      await update($, picker, current => (current === name ? '' : name))
+    }
+    const lockable = (key: string, child: JSX.Element) =>
+      isLocked ? (
+        <Box key={key}>{child}</Box>
+      ) : (
+        <Button key={key} plain onPress={toggle(key)}>
+          {child}
+        </Button>
+      )
     const segments = [
-      ...(label === undefined ? [] : [<Text key="agent" color="suggestion">{`↳ ${label}`}</Text>]),
-      <Text key="model" color="claude" bold>{`✦ ${model === '' ? '…' : prettyModel(model)}`}</Text>,
+      ...(label === undefined ? [] : [<Text key="agent" color="suggestion">{`\u21b3 ${label}`}</Text>]),
+      lockable(
+        'model',
+        <Text color={isLocked ? 'subtle' : 'claude'} bold>{`\u2726 ${model === '' ? '\u2026' : prettyModel(model)}`}</Text>,
+      ),
       ...(stats.effort === ''
         ? []
-        : [
-            agentId === undefined ? (
-              <Button key="effort" plain onPress={togglePicker}>
-                {effortText}
-              </Button>
-            ) : (
-              <Box key="effort">{effortText}</Box>
-            ),
-          ]),
+        : [lockable('effort', <Text color={isLocked ? 'subtle' : effortColor(stats.effort)}>{stats.effort}</Text>)]),
       <Button key="tokens" plain onPress={() => update($, showCost, current => !current)}>
         <Text color="text">
           {isCost ? `${formatCost(spent)} session` : `${formatTokens(shownTokens)} tokens`}
         </Text>
       </Button>,
-      <Text key="folder" color="subtle" wrap="truncate-end">{`▸ ${folder}`}</Text>,
+      <Text key="folder" color="subtle" wrap="truncate-end">{`\u25b8 ${folder}`}</Text>,
     ]
     const parts = segments.flatMap((segment, index) =>
-      index === 0 ? [segment] : [<Text key={`dot-${index}`} color="inactive">{'·'}</Text>, segment],
+      index === 0 ? [segment] : [<Text key={`dot-${index}`} color="inactive">{'\u00b7'}</Text>, segment],
+    )
+    const choose = (name: string, label: string, isCurrent: boolean, onChoose: () => Promise<unknown>) => (
+      <Button
+        key={`${name}-${label}`}
+        plain
+        onPress={async () => {
+          await update($, picker, () => '')
+          if (viewedAgent !== undefined || (await isBusy($, lastWorking))) return
+          await onChoose()
+        }}
+      >
+        <Text color={isCurrent ? 'success' : 'text'}>{`${isCurrent ? '\u25cf' : '\u25cb'} ${label}`}</Text>
+      </Button>
     )
     const options =
-      open === 'effort'
-        ? EFFORTS.map(item => (
-            <Button
-              key={`effort-${item}`}
-              plain
-              onPress={async () => {
-                await update($, picker, () => '')
+      open === 'model'
+        ? MODELS.map(item =>
+            choose('model', item.label, model.includes(item.alias), () => runCommand($, 'model', item.alias)),
+          )
+        : open === 'effort'
+          ? EFFORTS.map(item =>
+              choose('effort', item, item === stats.effort, async () => {
                 if (await runCommand($, 'effort', item)) {
                   await update($, loops, patchLoop(MAIN, current => ({ ...current, effort: item })))
                 }
-              }}
-            >
-              <Text color={item === stats.effort ? 'success' : 'text'}>
-                {`${item === stats.effort ? '●' : '○'} ${item}`}
-              </Text>
-            </Button>
-          ))
-        : []
+              }),
+            )
+          : []
 
     return (
       <Box flexDirection="column">
@@ -207,9 +248,18 @@ export const register: Register = on => {
             {engineLine}
           </Box>
           <Box gap={1}>
-            {enhancer === undefined ? null : (
-              <Button key="enhancer" plain onPress={() => runCommand($, enhancer.name)}>
-                <Text color="subtle">{'✦'}</Text>
+            {enhancer === undefined ? null : isWorkingNow ? (
+              <Text key="enhancer" color="inactive">{enhancerLabel(e.props.isDraft)}</Text>
+            ) : (
+              <Button
+                key="enhancer"
+                plain
+                onPress={async () => {
+                  if (await isBusy($, lastWorking)) return
+                  await runCommand($, enhancer.name)
+                }}
+              >
+                <Text color={e.props.isDraft ? 'suggestion' : 'subtle'}>{enhancerLabel(e.props.isDraft)}</Text>
               </Button>
             )}
             <Text color={colorFor(value)}>{glyphFor(value)} </Text>
