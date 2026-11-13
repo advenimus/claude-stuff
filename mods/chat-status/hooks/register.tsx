@@ -197,11 +197,11 @@ export const register: Register = on => {
       ...(label === undefined ? [] : [<Text key="agent" color="suggestion">{`\u21b3 ${label}`}</Text>]),
       lockable(
         'model',
-        <Text color={isLocked ? 'subtle' : 'claude'} bold>{`\u2726 ${model === '' ? '\u2026' : prettyModel(model)}`}</Text>,
+        <Text color="claude" bold>{`\u2726 ${model === '' ? '\u2026' : prettyModel(model)}`}</Text>,
       ),
       ...(stats.effort === ''
         ? []
-        : [lockable('effort', <Text color={isLocked ? 'subtle' : effortColor(stats.effort)}>{stats.effort}</Text>)]),
+        : [lockable('effort', <Text color={effortColor(stats.effort)}>{stats.effort}</Text>)]),
       <Button key="tokens" plain onPress={() => update($, showCost, current => !current)}>
         <Text color="text">
           {isCost ? `${formatCost(spent)} session` : `${formatTokens(shownTokens)} tokens`}
@@ -249,7 +249,9 @@ export const register: Register = on => {
           </Box>
           <Box gap={1}>
             {enhancer === undefined ? null : isWorkingNow ? (
-              <Text key="enhancer" color="inactive">{enhancerLabel(e.props.isDraft)}</Text>
+              <Text key="enhancer" color={e.props.isDraft ? 'suggestion' : 'subtle'}>
+                {enhancerLabel(e.props.isDraft)}
+              </Text>
             ) : (
               <Button
                 key="enhancer"

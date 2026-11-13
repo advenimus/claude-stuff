@@ -57,7 +57,7 @@ A status line under the prompt box for the chat you have on screen: the model, e
 - **Model:** click it to pick Opus, Sonnet or Haiku. It runs `/model` for you.
 - **Subagents:** open a subagent from the tasks list and the line switches to it: `↳ name`, its model, its effort and its tokens. Go back and it shows the main chat again.
 - **Effort:** click it to pick low, medium, high, xhigh or max. It runs `/effort` for you. It shows after the first message.
-- **Locked while busy:** the model and effort pickers do nothing while Claude or a subagent is working, or while you view a subagent. They turn dim. They work again once the work is done.
+- **Locked while busy:** the model and effort pickers do nothing while Claude or a subagent is working, or while you view a subagent. They look the same but ignore clicks. They work again once the work is done.
 - **Tokens:** in the main chat, the session total across the main chat and its subagents, as `/usage` counts input, output and cache. In a subagent, that agent's own. It updates after each model reply. Click it to switch between tokens and the session cost in US dollars.
 - **Pie:** the main chat's context. Goes from empty to full as it fills. Green below 60%, yellow from 60%, red from 80%.
 - **✦ icon:** appears when the prompt-enhancer mod is installed. Click it to show or hide that bar. Once you type in the prompt it reads `✦ enhance prompt`. It does nothing while Claude or a subagent is working.
