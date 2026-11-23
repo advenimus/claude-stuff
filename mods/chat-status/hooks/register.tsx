@@ -50,8 +50,6 @@ async function refreshCost($: EngineInterface): Promise<void> {
   if (usage.cost !== undefined) await update($, cost, () => usage.cost?.usd ?? 0)
 }
 
-const folderOf = (path: string): string => path.split('/').filter(Boolean).at(-1) ?? '/'
-
 const prettyModel = (id: string): string => {
   const match = /^claude-([a-z]+)-(\d+)(?:-(\d{1,2}))?(?:-\d{8})?(\[1m\])?$/.exec(id)
   if (match === null) return id
@@ -169,7 +167,6 @@ export const register: Register = on => {
     const isLocked = agentId !== undefined || isWorkingNow
     const open = isLocked ? '' : await read($, picker)
     const model = agentId === undefined ? await $.session.model() : stats.model
-    const folder = folderOf(await $.session.cwd())
     const enhancer = (await $.command.list()).find(
       command => command.name === 'enhancer' || command.name.endsWith(':enhancer'),
     )
@@ -198,7 +195,6 @@ export const register: Register = on => {
           {isCost ? `${formatCost(spent)} session` : `${formatTokens(shownTokens)} tokens`}
         </Text>
       </Button>,
-      <Text key="folder" color="subtle" wrap="truncate-end">{`\u25b8 ${folder}`}</Text>,
     ]
     const parts = segments.flatMap((segment, index) =>
       index === 0 ? [segment] : [<Text key={`dot-${index}`} color="inactive">{'\u00b7'}</Text>, segment],

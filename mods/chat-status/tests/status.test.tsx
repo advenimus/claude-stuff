@@ -51,7 +51,7 @@ const viewAgent = (agentId?: string) => ({
   props: { view: agentId === undefined ? {} : { agentId } },
 })
 
-test('main view shows the session model, main tokens, folder and pie', async ($, on) => {
+test('main view shows the session model, main tokens and pie, no folder', async ($, on) => {
   answerSession(on)
 
   for (const surface of ['terminal', 'desktop'] as const) {
@@ -59,7 +59,7 @@ test('main view shows the session model, main tokens, folder and pie', async ($,
 
     expect(await ui.find({ type: 'Text', text: /Sonnet 5\.5/ })).toBeTruthy()
     expect(await ui.find({ type: 'Text', text: /13\.2k tokens/ })).toBeTruthy()
-    expect(await ui.find({ type: 'Text', text: /claude-stuff/ })).toBeTruthy()
+    expect(await ui.find({ type: 'Text', text: /claude-stuff/ })).toBeFalsy()
     expect((await ui.find({ type: 'Text', text: /42%/ }))?.text).toBe('42%')
     expect(await ui.find({ type: 'Text', text: /engine/ })).toBeTruthy()
     await ui.unmount()
